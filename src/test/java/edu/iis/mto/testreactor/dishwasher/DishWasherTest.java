@@ -3,6 +3,7 @@ package edu.iis.mto.testreactor.dishwasher;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
+import edu.iis.mto.testreactor.dishwasher.pump.PumpException;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -85,6 +86,30 @@ class DishWasherTest {
         Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
         ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
         RunResult expectedRunResult = generateRunResult(Status.DOOR_OPEN, 0);
+        RunResult actualRunResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
+        Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
+    }
+
+    @Test
+    void dishWasherPumpPourExceptionTest() throws PumpException {
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        Mockito.doThrow(new PumpException()).when(waterPump).pour(FillLevel.HALF);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        RunResult expectedRunResult = generateRunResult(Status.ERROR_PUMP, 0);
+        RunResult actualRunResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
+        Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
+    }
+
+    @Test
+    void dishWasherPumpDrainExceptionTest() throws PumpException {
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        Mockito.doThrow(new PumpException()).when(waterPump).drain();
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        RunResult expectedRunResult = generateRunResult(Status.ERROR_PUMP, 0);
         RunResult actualRunResult = dishWasher.start(programConfiguration);
         Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
         Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
