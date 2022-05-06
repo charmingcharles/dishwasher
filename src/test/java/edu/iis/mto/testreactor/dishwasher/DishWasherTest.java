@@ -3,6 +3,7 @@ package edu.iis.mto.testreactor.dishwasher;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
+import edu.iis.mto.testreactor.dishwasher.engine.EngineException;
 import edu.iis.mto.testreactor.dishwasher.pump.PumpException;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
 import org.hamcrest.Matchers;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+
+import java.util.List;
 
 
 class DishWasherTest {
@@ -110,6 +113,20 @@ class DishWasherTest {
         Mockito.doThrow(new PumpException()).when(waterPump).drain();
         ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
         RunResult expectedRunResult = generateRunResult(Status.ERROR_PUMP, 0);
+        RunResult actualRunResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
+        Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
+    }
+
+    @Test
+    void dishWasherEngineExceptionTest() throws EngineException {
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        RunResult expectedRunResult = generateRunResult(Status.ERROR_PROGRAM, 0);
+
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        Mockito.doThrow(new EngineException()).when(engine).runProgram(List.of(programConfiguration.getProgram().ordinal(), programConfiguration.getProgram().getTimeInMinutes()));
+
         RunResult actualRunResult = dishWasher.start(programConfiguration);
         Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
         Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
