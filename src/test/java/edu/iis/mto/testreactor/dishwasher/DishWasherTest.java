@@ -151,5 +151,48 @@ class DishWasherTest {
         inOrder.verify(door).unlock();
     }
 
+    @Test
+    void incorrectErrorFilterRunBehaviourTest() throws PumpException, EngineException {
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(40.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        generateRunResult(Status.ERROR_FILTER, 0);
+        dishWasher.start(programConfiguration);
+        InOrder inOrder = Mockito.inOrder(door, dirtFilter, waterPump, engine);
+        inOrder.verify(door).closed();
+        inOrder.verify(dirtFilter).capacity();
+        inOrder.verify(door, Mockito.times(0)).lock();
+        inOrder.verify(waterPump, Mockito.times(0)).pour(any(FillLevel.class));
+        inOrder.verify(engine, Mockito.times(0)).runProgram(any());
+        inOrder.verify(waterPump, Mockito.times(0)).drain();
+        inOrder.verify(door, Mockito.times(0)).unlock();
+    }
+
+    @Test
+    void washingProgramNightTest(){
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.NIGHT, FillLevel.HALF, true);
+        RunResult runResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(runResult.getRunMinutes(), WashingProgram.NIGHT.getTimeInMinutes());
+    }
+
+    @Test
+    void washingProgramRinseTest(){
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.RINSE, FillLevel.HALF, true);
+        RunResult runResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(runResult.getRunMinutes(), WashingProgram.RINSE.getTimeInMinutes());
+    }
+
+    @Test
+    void washingProgramIntensiveTest(){
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.INTENSIVE, FillLevel.HALF, true);
+        RunResult runResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(runResult.getRunMinutes(), WashingProgram.INTENSIVE.getTimeInMinutes());
+    }
 
 }
