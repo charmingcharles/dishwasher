@@ -38,7 +38,7 @@ class DishWasherTest {
 
     RunResult generateRunResult(Status status, int runMinutes){
         return RunResult.builder()
-                .withStatus(Status.SUCCESS)
+                .withStatus(status)
                 .withRunMinutes(runMinutes)
                 .build();
     }
@@ -63,6 +63,28 @@ class DishWasherTest {
         Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
         ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
         RunResult expectedRunResult = generateRunResult(Status.SUCCESS, programConfiguration.getProgram().getTimeInMinutes());
+        RunResult actualRunResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
+        Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
+    }
+
+    @Test
+    void dishWasherNotEnoughCapacityIncorrectRunTest(){
+        Mockito.when(door.closed()).thenReturn(true);
+        Mockito.when(dirtFilter.capacity()).thenReturn(40.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        RunResult expectedRunResult = generateRunResult(Status.ERROR_FILTER, 0);
+        RunResult actualRunResult = dishWasher.start(programConfiguration);
+        Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
+        Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
+    }
+
+    @Test
+    void dishWasherDoorsNotClosedIncorrectRunTest(){
+        Mockito.when(door.closed()).thenReturn(false);
+        Mockito.when(dirtFilter.capacity()).thenReturn(60.0);
+        ProgramConfiguration programConfiguration = generateProgramConfiguration(WashingProgram.ECO, FillLevel.HALF, true);
+        RunResult expectedRunResult = generateRunResult(Status.DOOR_OPEN, 0);
         RunResult actualRunResult = dishWasher.start(programConfiguration);
         Assertions.assertEquals(expectedRunResult.getStatus(), actualRunResult.getStatus());
         Assertions.assertEquals(expectedRunResult.getRunMinutes(), actualRunResult.getRunMinutes());
